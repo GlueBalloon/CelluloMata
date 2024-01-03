@@ -1,72 +1,49 @@
 
 
-function UnitTests_ConwaysGOL()
-    print("___---___---___---\nUnitTests_ConwaysGOL")
-    -- Test function
-    function runConwaysGOLTest(description, gridSetup, expectedResult)
-        print("Test: " .. description)
-        local testGrid = CAGrid(3, 3)
-        gridSetup(testGrid)
-        local conwaysGOL = ConwaysGOL()
-        local result = conwaysGOL:nextCellState(testGrid, 2, 2)
-        assert(result == expectedResult, "Expected " .. tostring(expectedResult) .. ", got " .. tostring(result))
-        print(" Passed")
-    end
-    
-    
-    -- Test: Dead cell with three live neighbors becomes alive
-    runConwaysGOLTest("Dead cell with three live neighbors becomes alive",
-    function(grid)
-        grid.cells[1][2] = 1
-        grid.cells[2][1] = 1
-        grid.cells[2][3] = 1
-    end,
-    1)
-    
-    -- Test: Live cell with two live neighbors stays alive
-    runConwaysGOLTest("Live cell with two live neighbors stays alive",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][2] = 1
-        grid.cells[2][1] = 1
-    end,
-    1)
-    
-    -- Test: Live cell with fewer than two live neighbors dies
-    runConwaysGOLTest("Live cell with fewer than two live neighbors dies",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][2] = 1
-    end,
-    0)
-    
-    -- Test: Live cell with more than three live neighbors dies
-    runConwaysGOLTest("Live cell with more than three live neighbors dies",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][1] = 1
-        grid.cells[1][2] = 1
-        grid.cells[1][3] = 1
-        grid.cells[2][1] = 1
-    end,
-    0)
-    
-end
-
-
-function formatGrid(grid)
-    local gridString = ""
-    for i = 1, #grid do
-        gridString = gridString .. "Row " .. i .. ": "
-        for j = 1, #grid[i] do
-            gridString = gridString .. (grid[i][j] == 1 and "1" or "0") .. " "
+function UnitTests_Nesting()
+    print("___---___---___---\nUnitTests_Nesting")
+    -- Unit test for NestingGOLRules
+    function unitTest_NestingGOL()
+        local function runNestingGOLTest(description, gridSetup, verificationFunction)
+            print("Test: " .. description)
+            local testGrid = CAGrid(3, 3)
+            gridSetup(testGrid)
+            
+            local nestingGOLRules = NestingGOLRules()
+            nestingGOLRules:setup(testGrid)
+            
+            -- Verification of the grid state
+            verificationFunction(testGrid)
+            
+            print(" Passed")
         end
-        gridString = gridString:sub(1, -2)  -- Remove the trailing space
-        gridString = gridString .. "\n"     -- Add a newline after each row
+        
+        -- Test: Every non-zero cell becomes a nested grid
+        runNestingGOLTest("Every non-zero cell becomes a nested grid",
+        function(grid)
+            -- Setup grid with random 1s and 0s
+            for i = 1, grid.rows do
+                for j = 1, grid.cols do
+                    grid.cells[i][j] = math.random(0, 1)
+                end
+            end
+        end,
+        function(grid)
+            for i = 1, grid.rows do
+                for j = 1, grid.cols do
+                    if grid.cells[i][j] ~= 0 then
+                        assert(type(grid.cells[i][j]) == "table" and grid.cells[i][j].isNestedGrid, "Cell [" .. i .. "," .. j .. "] is not a nested grid")
+                    end
+                end
+            end
+        end
+        )
+        
     end
-    return gridString
+    
+    -- Run the tests
+    unitTest_NestingGOL()
 end
-
 
 function UnitTests_CAUpdater()
     print("___---___---___---\nUnitTests_CAUpdater")
@@ -87,7 +64,7 @@ function UnitTests_CAUpdater()
         -- Initialize CAUpdater with ConwaysGOL and the grid
         local conwaysGOL = ConwaysGOL()
         local updater = CAUpdater(testGrid, {conwaysGOL})
-
+        
         -- Count live and dead cells
         local liveCount, deadCount = 0, 0
         for i = 1, rows do
@@ -213,3 +190,72 @@ function UnitTests_CAUpdater()
     testRandomInitialization()
     testUpdating()
 end
+
+function UnitTests_ConwaysGOL()
+    print("___---___---___---\nUnitTests_ConwaysGOL")
+    -- Test function
+    function runConwaysGOLTest(description, gridSetup, expectedResult)
+        print("Test: " .. description)
+        local testGrid = CAGrid(3, 3)
+        gridSetup(testGrid)
+        local conwaysGOL = ConwaysGOL()
+        local result = conwaysGOL:nextCellState(testGrid, 2, 2)
+        assert(result == expectedResult, "Expected " .. tostring(expectedResult) .. ", got " .. tostring(result))
+        print(" Passed")
+    end
+    
+    
+    -- Test: Dead cell with three live neighbors becomes alive
+    runConwaysGOLTest("Dead cell with three live neighbors becomes alive",
+    function(grid)
+        grid.cells[1][2] = 1
+        grid.cells[2][1] = 1
+        grid.cells[2][3] = 1
+    end,
+    1)
+    
+    -- Test: Live cell with two live neighbors stays alive
+    runConwaysGOLTest("Live cell with two live neighbors stays alive",
+    function(grid)
+        grid.cells[2][2] = 1
+        grid.cells[1][2] = 1
+        grid.cells[2][1] = 1
+    end,
+    1)
+    
+    -- Test: Live cell with fewer than two live neighbors dies
+    runConwaysGOLTest("Live cell with fewer than two live neighbors dies",
+    function(grid)
+        grid.cells[2][2] = 1
+        grid.cells[1][2] = 1
+    end,
+    0)
+    
+    -- Test: Live cell with more than three live neighbors dies
+    runConwaysGOLTest("Live cell with more than three live neighbors dies",
+    function(grid)
+        grid.cells[2][2] = 1
+        grid.cells[1][1] = 1
+        grid.cells[1][2] = 1
+        grid.cells[1][3] = 1
+        grid.cells[2][1] = 1
+    end,
+    0)
+    
+end
+
+
+function formatGrid(grid)
+    local gridString = ""
+    for i = 1, #grid do
+        gridString = gridString .. "Row " .. i .. ": "
+        for j = 1, #grid[i] do
+            gridString = gridString .. (grid[i][j] == 1 and "1" or "0") .. " "
+        end
+        gridString = gridString:sub(1, -2)  -- Remove the trailing space
+        gridString = gridString .. "\n"     -- Add a newline after each row
+    end
+    return gridString
+end
+
+

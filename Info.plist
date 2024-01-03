@@ -5,7 +5,7 @@
 	<key>Buffer Order</key>
 	<array>
 		<string>Main</string>
-		<string>Rules</string>
+		<string>CACellRules</string>
 		<string>CAGrid</string>
 		<string>CAUpdater</string>
 		<string>Visualizer</string>

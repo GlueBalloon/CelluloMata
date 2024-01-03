@@ -1,15 +1,20 @@
 CAGrid = class()
 
-function CAGrid:init(rows, cols)
-    self.rows = rows
-    self.cols = cols
-    self.cells = {}
+CAGrid.gridOfZeros = function(rows, cols) 
+    local newGrid = {}
     for i = 1, rows do
-        self.cells[i] = {}
+        newGrid[i] = {}
         for j = 1, cols do
-            self.cells[i][j] = 0 -- Initially all cells are dead
+            newGrid[i][j] = 0
         end
     end
+    return newGrid
+end
+
+function CAGrid:init(rows, cols)
+    self.rows = rows or 14
+    self.cols = cols or 14
+    self.cells = self.gridOfZeros(self.rows, self.cols)
     self.query = nil
     self.wrapsAround = false
     self.color = color(255)

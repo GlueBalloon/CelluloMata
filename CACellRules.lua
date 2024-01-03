@@ -32,3 +32,5 @@ function ConwaysGOL:nextCellState(grid, row, col)
     return (hasThree or aliveWithTwo) and 1 or 0
 end
 
+
+
