@@ -1,44 +1,4 @@
 
-
-Updater = class()
-
-function Updater:init(ca)
-    self.ca = ca
-end
-
-function Updater:update()
-    self:updateCA(self.ca)
-end
-
-function Updater:applySystemsRules(ca, row, col)
-    local finalState = ca.grid.cells[row][col]
-    for _, system in ipairs(ca.systems) do
-        finalState = system:applyRule(ca.grid, row, col)
-    end
-    return finalState
-end
-
-function Updater:updateCA(ca)
-    for _, system in ipairs(ca.systems) do
-        system:updateGrid(ca.grid)
-        
-        -- Handle nested CAs
-        for i = 1, ca.grid.rows do
-            for j = 1, ca.grid.cols do
-                local cell = ca.grid:getFullCell(i, j)
-                if type(cell) == "table" and cell.class == "CellularAutomata" then
-                    self:updateCA(cell)  -- Update nested CAs
-                end
-            end
-        end
-        
-        system:afterUpdates(ca.grid)
-    end
-end
-
-
-
-
 CAUpdater = class()
 
 function CAUpdater:init(grid, rulesTable)

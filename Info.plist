@@ -5,14 +5,13 @@
 	<key>Buffer Order</key>
 	<array>
 		<string>Main</string>
-		<string>CellularAutomata</string>
-		<string>Systems</string>
-		<string>NestedSystems</string>
+		<string>Rules</string>
+		<string>CAGrid</string>
 		<string>CAUpdater</string>
 		<string>Visualizer</string>
-		<string>CAGrid</string>
 		<string>DemoControl</string>
 		<string>Tests</string>
+		<string>Utilities</string>
 	</array>
 </dict>
 </plist>

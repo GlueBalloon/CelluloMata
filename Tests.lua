@@ -1,6 +1,7 @@
 
 
 function UnitTests_ConwaysGOL()
+    print("___---___---___---\nUnitTests_ConwaysGOL")
     -- Test function
     function runConwaysGOLTest(description, gridSetup, expectedResult)
         print("Test: " .. description)
