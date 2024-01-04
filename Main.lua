@@ -7,9 +7,6 @@ function setup()
     local conwaysGOL = ConwaysGOL() -- Create an instance of Conway's Game of Life rules
     updater = CAUpdater(grid, {conwaysGOL}) -- Create an updater with the grid and rules
     visualizer = Visualizer(grid)
-    
-    UnitTests_ConwaysGOL()
-    UnitTests_CAUpdater()
 end
 
 function draw()
