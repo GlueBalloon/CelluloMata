@@ -16,15 +16,20 @@ function Visualizer:draw()
             -- Draw regular cell (alive cells in white, dead cells in black)
             fill(cell == 1 and self.grid.color or color(0))
             rect(x, y, self.cellWidth, self.cellHeight)
-
-            --needs to detect a nested table, and draw its cells within the cell
+            
+            -- Draw nested cells if the current cell is a grid
             if type(cell) == "table" then
+                local nestedCellWidth = self.cellWidth / #cell
+                local nestedCellHeight = self.cellHeight / #cell[1]
+                
                 for k = 1, #cell do
-                    local subCell = cell[k]
-                    local subX = x + (k - 1) * self.cellWidth / #cell
-                    local subY = y + (k - 1) * self.cellHeight / #cell
-                    fill(subCell == 1 and self.grid.color or color(0))
-                    rect(subX, subY, self.cellWidth / #cell, self.cellHeight / #cell)
+                    for l = 1, #cell[k] do
+                        local subCell = cell[k][l]
+                        local subX = x + (l - 1) * nestedCellWidth
+                        local subY = y + (k - 1) * nestedCellHeight
+                        fill(subCell == 1 and self.grid.color or color(0))
+                        rect(subX, subY, nestedCellWidth * 1.25, nestedCellHeight * 1.25)
+                    end
                 end
             end
         end

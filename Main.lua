@@ -5,9 +5,10 @@ function setup()
     grid = CAGrid(gridSize, gridSize) -- Create a 20x20 grid
     grid.color = randomPastellyColor()
     local conwaysGOL = ConwaysGOL() -- Create an instance of Conway's Game of Life rules
-    updater = CAUpdater(grid, {conwaysGOL}) -- Create an updater with the grid and rules
-    visualizer = Visualizer(grid)
-    
+    local nestingGOL = NestingGOLRules(10, 10)
+    updater = CAUpdater(grid, {conwaysGOL, nestingGOL}) -- Create an updater with the grid and rules
+    visualizer = Visualizer(updater.grid)
+
     UnitTests_ConwaysGOL()
     UnitTests_CAUpdater()
     UnitTests_Nesting()

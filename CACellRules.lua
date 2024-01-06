@@ -52,12 +52,14 @@ function NestingGOLRules:setup(grid)
     for i = 1, grid.rows do
         for j = 1, grid.cols do
             if grid.cells[i][j] ~= 0 then
-                -- Convert cell to a nested grid (data table, not a class)
-                grid.cells[i][j] = CAGrid.gridOfZeros(grid.rows, grid.cols)
+                -- Convert cell to a nested grid
+                local nestedGrid = CAGrid.gridOfZeros(self.rows, self.cols)
+                grid.cells[i][j] = nestedGrid
+                
+                -- Randomly initialize the nested grid
                 for r = 1, self.rows do
-                    grid.cells[i][j][r] = {}
                     for c = 1, self.cols do
-                        grid.cells[i][j][r][c] = 0
+                        nestedGrid[r][c] = math.random(0, 1)
                     end
                 end
             end

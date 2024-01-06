@@ -39,6 +39,10 @@ function UnitTests_Nesting()
         print("* Nesting Initialization Test Passed")
     end
     
+    
+    
+    
+    
     -- Test function for NestingGOLRules custom sizes
     local function runNestingCustomSizesTest(description, rows, cols)
         print("Test: " .. description)
@@ -86,8 +90,12 @@ function UnitTests_Nesting()
         return grid
     end
     
+    
+    
+    
+    
     --test if whole nesting cells live or die consistent with Conway's GOL rules
-    function testNestingCellAliveness()
+    function testNestedGridAliveness()
         local nestingRows, nestingCols = 2, 2  -- Define dimensions for nested grids
     
         -- Test function for NestingGOL with Conway's GOL rules
@@ -209,17 +217,75 @@ function UnitTests_Nesting()
         for i = 1, #gridState do
             local row = ""
             for j = 1, #gridState[i] do
-                row = row .. (gridState[i][j] == 1 and "G" or tostring(gridState[i][j])) .. " "
+                row = row .. (gridState[i][j] ~= 0 and "G" or tostring(gridState[i][j])) .. " "
             end
             gridString = gridString .. row .. "\n"
         end
         return gridString
     end
     
+    
+    
+    
+    -- Test function for statistically even distribution of living and dead cells in nested grids
+    function testNestedGridCellsInitialization()
+        local mainGridSize = 10
+        local nestedGridSize = 25  -- Size of nested grids, larger to make living vs dead more equal
+        local testGrid = CAGrid(mainGridSize, mainGridSize)
+        local conwaysGOL = ConwaysGOL()
+        local nestingGOL = NestingGOLRules(nestedGridSize, nestedGridSize)
+        local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
+        
+        -- Iterate through each cell in the main grid and check nested grids
+        for i = 1, mainGridSize do
+            for j = 1, mainGridSize do
+                local cell = testGrid.cells[i][j]
+                if type(cell) == "table" then  -- Check if it's a nested grid
+                    -- Count living and dead cells in the nested grid
+                    local livingCount, deadCount = countLivingAndDeadCells(cell)
+                    -- Check if living and dead counts are statistically even
+                    assert(isStatisticallyEven(livingCount, deadCount), 
+                    "Living and dead cell counts are not statistically even in nested grid at [" .. i .. "," .. j .. "]")
+                end
+            end
+        end
+        print(" Passed")
+    end
+    
+    -- Helper function to count living and dead cells in a grid
+    function countLivingAndDeadCells(grid)
+        local livingCount, deadCount = 0, 0
+        for i = 1, #grid do
+            for j = 1, #grid[i] do
+                if grid[i][j] ~= 1 then
+                    livingCount = livingCount + 1
+                else
+                    deadCount = deadCount + 1
+                end
+            end
+        end
+        return livingCount, deadCount
+    end
+    
+    -- Helper function to check if two counts are statistically even
+    function isStatisticallyEven(count1, count2)
+        -- Implement statistical evenness check
+        -- For simplicity, this could be a threshold difference check
+        local threshold = 0.15  -- 10% tolerance for difference
+        local total = count1 + count2
+        local expectedEach = total / 2
+        return math.abs(count1 - expectedEach) <= threshold * expectedEach and
+        math.abs(count2 - expectedEach) <= threshold * expectedEach
+    end
+    
+    
+    
+    
     -- Run the tests
     testNestingInitialization()
     testNestingRulesWithCustomSizes()
-    testNestingCellAliveness()
+    testNestedGridAliveness()
+    testNestedGridCellsInitialization()
 end
 
 
