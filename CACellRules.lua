@@ -5,6 +5,9 @@ function CACellRules:setup(grid) end
 function CACellRules:nextCellState(grid, row, col) end
 
 
+
+
+
 -- Conway's Game Of Life in that structure
 ConwaysGOL = class(CACellRules)
 
@@ -33,4 +36,50 @@ function ConwaysGOL:nextCellState(grid, row, col)
 end
 
 
+
+
+
+-- NestingGOLRules Class
+NestingGOLRules = class(CACellRules)
+
+function NestingGOLRules:init(rows, cols)
+    CACellRules.init(self)
+    self.rows = rows or 6
+    self.cols = cols or 6
+end
+
+function NestingGOLRules:setup(grid)
+    for i = 1, grid.rows do
+        for j = 1, grid.cols do
+            if grid.cells[i][j] ~= 0 then
+                -- Convert cell to a nested grid (data table, not a class)
+                grid.cells[i][j] = CAGrid.gridOfZeros(grid.rows, grid.cols)
+                for r = 1, self.rows do
+                    grid.cells[i][j][r] = {}
+                    for c = 1, self.cols do
+                        grid.cells[i][j][r][c] = 0
+                    end
+                end
+            end
+        end
+    end
+end
+
+function NestingGOLRules:nextCellState(grid, row, col)
+    -- Check if the cell currently has a nested grid or is empty
+    local currentCell = grid.cells[row][col]
+    local isNestedGrid = type(currentCell) == "table"  
+    -- does cell have 3 neighbors?
+    local hasThree = grid:queryCell(row, col):queriedNeighborCountIs(3)
+    -- is cell already alive with 2 neighbors?
+    local aliveWithTwo = isNestedGrid and grid:queriedNeighborCountIs(2)
+    
+    if hasThree or aliveWithTwo then
+        -- If the cell should be alive, return the existing grid if present, or create a new one
+        return isNestedGrid and currentCell or CAGrid.gridOfZeros(grid.rows, grid.cols)
+    else
+        -- If the cell should be dead, return 0
+        return 0
+    end
+end
 

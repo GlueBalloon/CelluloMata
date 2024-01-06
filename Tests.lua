@@ -2,48 +2,229 @@
 
 function UnitTests_Nesting()
     print("___---___---___---\nUnitTests_Nesting")
-    -- Unit test for NestingGOLRules
-    function unitTest_NestingGOL()
-        local function runNestingGOLTest(description, gridSetup, verificationFunction)
+    
+    -- Test Function for NestingGOLRules setup
+    function testNestingInitialization()
+        local testGrid = CAGrid(13, 13)
+        local conwaysGOL = ConwaysGOL()
+        local nestingGOL = NestingGOLRules()
+        local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
+        
+        local countGrids = 0
+        local countZeroes = 0
+        
+        -- Check if each cell is either 0 or a nested grid, and count them
+        for i = 1, testGrid.rows do
+            for j = 1, testGrid.cols do
+                local cell = testGrid.cells[i][j]
+                if type(cell) == "table" then
+                    countGrids = countGrids + 1
+                elseif cell == 0 then
+                    countZeroes = countZeroes + 1
+                else
+                    assert(false, "Cell [" .. i .. "," .. j .. "] is not properly nested")
+                end
+            end
+        end
+        
+        -- Check if the number of grids and zeroes are statistically equal
+        local totalCells = testGrid.rows * testGrid.cols
+        local expectedCount = totalCells / 2
+        local tolerance = 0.15 * expectedCount  -- Allowing 10% tolerance
+        
+        print("Distribution of grids: " .. countGrids .. " grids, " .. countZeroes .. " zeroes")
+        assert(math.abs(countGrids - expectedCount) <= tolerance, 
+        "Uneven distribution of grids")
+        
+        print("* Nesting Initialization Test Passed")
+    end
+    
+    -- Test function for NestingGOLRules custom sizes
+    local function runNestingCustomSizesTest(description, rows, cols)
+        print("Test: " .. description)
+        local testGrid = CAGrid(3, 3)
+        local nestingRules = NestingGOLRules(rows, cols)
+        local updater = CAUpdater(testGrid, {nestingRules})
+        
+        -- Verify the dimensions of each nested grid
+        for i = 1, testGrid.rows do
+            for j = 1, testGrid.cols do
+                if testGrid.cells[i][j] ~= 0 then
+                    local nestedGrid = testGrid.cells[i][j]
+                    assert(#nestedGrid == rows and #nestedGrid[1] == cols, 
+                    "Nested grid at [" .. i .. "," .. j .. "] does not have " ..
+                    "the correct dimensions (" .. rows .. "x" .. cols .. ")")
+                end
+            end
+        end
+        print(" Passed")
+    end
+    
+    -- Test different nesting sizes
+    function testNestingRulesWithCustomSizes()
+        runNestingCustomSizesTest("Nesting with 4x4 grids", 4, 4)
+        runNestingCustomSizesTest("Nesting with 5x3 grids", 5, 3)
+        runNestingCustomSizesTest("Nesting with 2x6 grids", 2, 6)
+        print("* Nesting Custom Sizes Test Passed")
+    end
+
+    
+    -- Helper function to create a test grid
+    local function createTestGridWithNesting(rows, cols, nestingRows, nestingCols)
+        local grid = CAGrid(rows, cols)
+        -- Initialize with some non-zero values
+        for i = 1, rows do
+            grid.cells[i] = {}
+            for j = 1, cols do
+                grid.cells[i][j] = math.random(0, 1)
+                if grid.cells[i][j] ~= 0 then
+                    -- Convert cell to a nested grid (data table, not a class)
+                    grid.cells[i][j] = CAGrid.gridOfZeros(nestingRows, nestingCols)
+                end
+            end
+        end
+        return grid
+    end
+    
+    --test if whole nesting cells live or die consistent with Conway's GOL rules
+    function testNestingCellAliveness()
+        local nestingRows, nestingCols = 2, 2  -- Define dimensions for nested grids
+    
+        -- Test function for NestingGOL with Conway's GOL rules
+        local function runNestingConwaysGOLTest(description, startGridState, expectedGridState)
             print("Test: " .. description)
             local testGrid = CAGrid(3, 3)
-            gridSetup(testGrid)
+    
+            local conwaysGOL = ConwaysGOL()
+            local nestingGOL = NestingGOLRules(nestingRows, nestingCols)
+            local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
             
-            local nestingGOLRules = NestingGOLRules()
-            nestingGOLRules:setup(testGrid)
+            -- Set up the initial grid state and turn off wraparound
+            for i = 1, 3 do
+                updater.grid.cells[i] = {}
+                for j = 1, 3 do
+                    local cellIsAlive = startGridState[i][j] == 1
+                    updater.grid.cells[i][j] = cellIsAlive and CAGrid.gridOfZeros(nestingRows, nestingCols) or 0
+                end
+            end
+            updater.grid.wrapsAround = false
             
-            -- Verification of the grid state
-            verificationFunction(testGrid)
+
+            local startGrid = stringForCAGrid(updater.grid)
+            --print("Starting Grid State:")
+            --print(startGrid)
+    
+            updater:update()  -- Perform an update
+            
+            local expGrid = stringForGridTable(expectedGridState, nestingRows, nestingCols)
+            --print("Expected Grid State:")
+            --print(expGrid)
+            
+            local actGrid = stringForCAGrid(updater.grid)
+            --print("Actual Grid State:")
+            --print(actGrid)
+            
+            local statesMatch = expGrid == actGrid
+            --print("States match: ", statesMatch)
+            
+            assert(statesMatch, "States do not match")
             
             print(" Passed")
         end
-        
-        -- Test: Every non-zero cell becomes a nested grid
-        runNestingGOLTest("Every non-zero cell becomes a nested grid",
-        function(grid)
-            -- Setup grid with random 1s and 0s
-            for i = 1, grid.rows do
-                for j = 1, grid.cols do
-                    grid.cells[i][j] = math.random(0, 1)
-                end
-            end
-        end,
-        function(grid)
-            for i = 1, grid.rows do
-                for j = 1, grid.cols do
-                    if grid.cells[i][j] ~= 0 then
-                        assert(type(grid.cells[i][j]) == "table" and grid.cells[i][j].isNestedGrid, "Cell [" .. i .. "," .. j .. "] is not a nested grid")
-                    end
-                end
-            end
-        end
+    
+        -- Test scenarios
+        -- Test: Dead cell with three live neighbors becomes alive
+        runNestingConwaysGOLTest("Dead cell with three live neighbors becomes alive",
+            {
+                {0, 1, 0},
+                {1, 0, 1},
+                {0, 0, 0}
+            },
+            {
+                {0, 1, 0},
+                {0, 1, 0},
+                {0, 0, 0}
+            }
         )
-        
+    
+        -- Test: Live cell with two live neighbors stays alive
+        runNestingConwaysGOLTest("Live cell with two live neighbors stays alive",
+            {
+                {0, 1, 0},
+                {1, 1, 0},
+                {0, 0, 0}
+            },
+            {
+                {1, 1, 0},
+                {1, 1, 0},
+                {0, 0, 0}
+            }
+        )
+    
+        -- Test: Live cell with fewer than two live neighbors dies
+        runNestingConwaysGOLTest("Live cell with fewer than two live neighbors dies",
+            {
+                {0, 1, 0},
+                {0, 1, 0},
+                {0, 0, 0}
+            },
+            {
+                {0, 0, 0},
+                {0, 0, 0},
+                {0, 0, 0}
+            }
+        )
+    
+        -- Test: Live cell with more than three live neighbors dies
+        runNestingConwaysGOLTest("Live cell with more than three live neighbors dies",
+            {
+                {1, 1, 1},
+                {1, 1, 1},
+                {0, 0, 0}
+            },
+            {
+                {1, 0, 1},
+                {1, 0, 1},
+                {0, 1, 0}
+            }
+        )
+    end
+    
+    -- Function to print the grid state (for debugging and test clarity)
+    function stringForCAGrid(grid)
+        local gridString = ""
+        for i = 1, #grid.cells do
+            local row = ""
+            for j = 1, #grid.cells[i] do
+                row = row .. (type(grid.cells[i][j]) == "table" and "G" or tostring(grid.cells[i][j])) .. " "
+            end
+            gridString = gridString .. row .. "\n"
+        end
+        return gridString
+    end
+    
+    -- Function to return the grid state as a single string
+    function stringForGridTable(gridState, nestingRows, nestingCols)
+        local gridString = ""
+        for i = 1, #gridState do
+            local row = ""
+            for j = 1, #gridState[i] do
+                row = row .. (gridState[i][j] == 1 and "G" or tostring(gridState[i][j])) .. " "
+            end
+            gridString = gridString .. row .. "\n"
+        end
+        return gridString
     end
     
     -- Run the tests
-    unitTest_NestingGOL()
+    testNestingInitialization()
+    testNestingRulesWithCustomSizes()
+    testNestingCellAliveness()
 end
+
+
+
+
 
 function UnitTests_CAUpdater()
     print("___---___---___---\nUnitTests_CAUpdater")
@@ -191,6 +372,7 @@ function UnitTests_CAUpdater()
     testUpdating()
 end
 
+
 function UnitTests_ConwaysGOL()
     print("___---___---___---\nUnitTests_ConwaysGOL")
     -- Test function
@@ -250,7 +432,8 @@ function formatGrid(grid)
     for i = 1, #grid do
         gridString = gridString .. "Row " .. i .. ": "
         for j = 1, #grid[i] do
-            gridString = gridString .. (grid[i][j] == 1 and "1" or "0") .. " "
+            --"a" for "alive":
+            gridString = gridString .. (grid[i][j] ~= 0 and "a" or "0") .. " "
         end
         gridString = gridString:sub(1, -2)  -- Remove the trailing space
         gridString = gridString .. "\n"     -- Add a newline after each row

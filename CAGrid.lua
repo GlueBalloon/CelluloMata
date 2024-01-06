@@ -69,7 +69,7 @@ function CAGrid:countQueriedNeighbors(row, col)
                         goto continue
                     end
                 end
-                if self.cells[r][c] == 1 then
+                if self.cells[r][c] ~= 0 then
                     count = count + 1
                 end
                 ::continue::
