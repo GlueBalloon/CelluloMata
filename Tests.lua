@@ -59,16 +59,19 @@ function evaluateGOLTestResults(grids)
     
     local results = {}
     for i = 1, #grids do
+        
         local grid = grids[i]
+        assert(type(grid) == "table", "grids[" .. i .. "] passed to evaluateGOLTestResults is not a table")
+        
         local expected = expectedResults[i]
         local isMatch = true
         local mismatchDetails = ""
         
-        for r = 1, #grid.cells do
-            for c = 1, #grid.cells[r] do
-                if grid.cells[r][c] ~= expected[r][c] then
+        for r = 1, #grid do
+            for c = 1, #grid[r] do
+                if grid[r][c] ~= expected[r][c] then
                     isMatch = false
-                    mismatchDetails = mismatchDetails .. "Mismatch at [" .. r .. "," .. c .. "], Expected: " .. tostring(expected[r][c]) .. ", got: " .. tostring(grid.cells[r][c]) .. "\n"
+                    mismatchDetails = mismatchDetails .. "Mismatch at [" .. r .. "," .. c .. "], Expected: " .. tostring(expected[r][c]) .. ", got: " .. tostring(grid[r][c]) .. "\n"
                 end
             end
         end
@@ -99,13 +102,18 @@ function stringForCAGrid(grid)
 end
 
 -- Function to return the grid state as a single string
-function stringForGridTable(gridState, nestingRows, nestingCols)
+function stringForGridTable(gridState)
     if type(grid) ~= "table" then return "1" end
     local gridString = ""
     for i = 1, #gridState do
         local row = ""
         for j = 1, #gridState[i] do
-            row = row .. (gridState[i][j] ~= 0 and "G" or tostring(gridState[i][j])) .. " "
+            if gridState[i][j] ~= 0 then
+                local nonZeroString = type(gridState[i][j]) == "table" and "G" or tostring(gridState[i][j])
+                row = row .. nonZeroString .. " "
+            else 
+                row = row .. "0" .. " "
+            end
         end
         gridString = gridString .. row .. "\n"
     end
@@ -156,53 +164,33 @@ function UnitTests_Nesting()
     
     
     
-    -- Test function for NestingGOLRules custom sizes
-    local function runNestingCustomSizesTest(description, rows, cols)
-        print("Test: " .. description)
-        local testGrid = CAGrid(3, 3)
-        local nestingRules = NestingGOLRules(rows, cols)
-        local updater = CAUpdater(testGrid, {nestingRules})
-        
-        -- Verify the dimensions of each nested grid
-        for i = 1, testGrid.rows do
-            for j = 1, testGrid.cols do
-                if testGrid.cells[i][j] ~= 0 then
-                    local nestedGrid = testGrid.cells[i][j]
-                    assert(#nestedGrid == rows and #nestedGrid[1] == cols, 
-                    "Nested grid at [" .. i .. "," .. j .. "] does not have " ..
-                    "the correct dimensions (" .. rows .. "x" .. cols .. ")")
-                end
-            end
-        end
-        print(" Passed")
-    end
-    
     -- Test different nesting sizes
     function testNestingRulesWithCustomSizes()
+        -- Test function for NestingGOLRules custom sizes
+        local function runNestingCustomSizesTest(description, rows, cols)
+            print("Test: " .. description)
+            local testGrid = CAGrid(3, 3)
+            local nestingRules = NestingGOLRules(rows, cols)
+            local updater = CAUpdater(testGrid, {nestingRules})
+            
+            -- Verify the dimensions of each nested grid
+            for i = 1, testGrid.rows do
+                for j = 1, testGrid.cols do
+                    if testGrid.cells[i][j] ~= 0 then
+                        local nestedGrid = testGrid.cells[i][j]
+                        assert(#nestedGrid == rows and #nestedGrid[1] == cols, 
+                        "Nested grid at [" .. i .. "," .. j .. "] does not have " ..
+                        "the correct dimensions (" .. rows .. "x" .. cols .. ")")
+                    end
+                end
+            end
+            print(" Passed")
+        end
         runNestingCustomSizesTest("Nesting with 4x4 grids", 4, 4)
         runNestingCustomSizesTest("Nesting with 5x3 grids", 5, 3)
         runNestingCustomSizesTest("Nesting with 2x6 grids", 2, 6)
         print("* Nesting Custom Sizes Test Passed")
     end
-
-    
-    -- Helper function to create a test grid
-    local function createTestGridWithNesting(rows, cols, nestingRows, nestingCols)
-        local grid = CAGrid(rows, cols)
-        -- Initialize with some non-zero values
-        for i = 1, rows do
-            grid.cells[i] = {}
-            for j = 1, cols do
-                grid.cells[i][j] = math.random(0, 1)
-                if grid.cells[i][j] ~= 0 then
-                    -- Convert cell to a nested grid (data table, not a class)
-                    grid.cells[i][j] = CAGrid.gridOfZeros(nestingRows, nestingCols)
-                end
-            end
-        end
-        return grid
-    end
-    
 
     
     
@@ -225,28 +213,36 @@ function UnitTests_Nesting()
                 updater.grid.cells[i] = {}
                 for j = 1, 3 do
                     local cellIsAlive = startGridState[i][j] == 1
-                    updater.grid.cells[i][j] = cellIsAlive and CAGrid.gridOfZeros(nestingRows, nestingCols) or 0
+                    updater.grid.cells[i][j] = cellIsAlive and CAGrid(nestingRows, nestingCols) or 0
                 end
             end
             updater.grid.wrapsAround = false
             
+            -- Convert expectedGridState to contain grids
+            for i = 1, 3 do
+                for j = 1, 3 do
+                    local cellIsAlive = expectedGridState[i][j] == 1
+                    expectedGridState[i][j] = cellIsAlive and CAGrid(nestingRows, nestingCols) or 0
+                end
+            end
+            
             
             local startGrid = stringForCAGrid(updater.grid)
-            --print("Starting Grid State:")
-            --print(startGrid)
+            print("Starting Grid State:")
+            print(startGrid)
             
             updater:update()  -- Perform an update
             
-            local expGrid = stringForGridTable(expectedGridState, nestingRows, nestingCols)
-            --print("Expected Grid State:")
-            --print(expGrid)
+            local expGrid = stringForCAGrid(expectedGridState)
+            print("Expected Grid State:")
+            print(expGrid)
             
             local actGrid = stringForCAGrid(updater.grid)
-            --print("Actual Grid State:")
-            --print(actGrid)
+            print("Actual Grid State:")
+            print(actGrid)
             
             local statesMatch = expGrid == actGrid
-            --print("States match: ", statesMatch)
+            print("States match: ", statesMatch)
             
             assert(statesMatch, "States do not match")
             
@@ -263,12 +259,42 @@ function UnitTests_Nesting()
         runNestingConwaysGOLTest("Live cell with fewer than two live neighbors dies", starts[3], expecteds[3])
         -- Test: Live cell with more than three live neighbors dies
         runNestingConwaysGOLTest("Live cell with more than three live neighbors dies", starts[4], expecteds[4])
+        
+        print("* Nested Grid Aliveness Test Passed")
     end
+    
+    
     
     
     
     -- Test function for statistically even distribution of living and dead cells in nested grids
     function testNestedGridCellsInitialization()
+        -- Helper function to count living and dead cells in a grid
+        function countLivingAndDeadCells(grid)
+            local livingCount, deadCount = 0, 0
+            for i = 1, #grid do
+                for j = 1, #grid[i] do
+                    if grid[i][j] ~= 1 then
+                        livingCount = livingCount + 1
+                    else
+                        deadCount = deadCount + 1
+                    end
+                end
+            end
+            return livingCount, deadCount
+        end
+        
+        -- Helper function to check if two counts are statistically even
+        function isStatisticallyEven(count1, count2)
+            -- Implement statistical evenness check
+            -- For simplicity, this could be a threshold difference check
+            local threshold = 0.15  -- 10% tolerance for difference
+            local total = count1 + count2
+            local expectedEach = total / 2
+            return math.abs(count1 - expectedEach) <= threshold * expectedEach and
+            math.abs(count2 - expectedEach) <= threshold * expectedEach
+        end
+        
         local mainGridSize = 10
         local nestedGridSize = 25  -- Size of nested grids, larger to make living vs dead more equal
         local testGrid = CAGrid(mainGridSize, mainGridSize)
@@ -289,49 +315,45 @@ function UnitTests_Nesting()
                 end
             end
         end
-        print(" Passed")
+        print("* Nested grid cells initialization Test Passed")
     end
     
-    -- Helper function to count living and dead cells in a grid
-    function countLivingAndDeadCells(grid)
-        local livingCount, deadCount = 0, 0
-        for i = 1, #grid do
-            for j = 1, #grid[i] do
-                if grid[i][j] ~= 1 then
-                    livingCount = livingCount + 1
-                else
-                    deadCount = deadCount + 1
+
+    
+    
+    
+    
+    
+    function testUpdatesInsideNestedGrids()
+        -- Helper function for translating normal cells to nested cells
+        function makeLivingCellsGrids(uberGrid)
+            for i = 1, grid.rows do
+                for j = 1, grid.cols do
+                    if grid.cells[i][j] ~= 0 then
+                        -- Convert cell to a nested grid
+                        local nestedGrid = CAGrid.gridOfZeros(self.rows, self.cols)
+                        grid.cells[i][j] = nestedGrid
+                        
+                        -- Randomly initialize the nested grid
+                        for r = 1, self.rows do
+                            for c = 1, self.cols do
+                                nestedGrid[r][c] = math.random(0, 1)
+                            end
+                        end
+                    end
                 end
             end
         end
-        return livingCount, deadCount
-    end
-    
-    -- Helper function to check if two counts are statistically even
-    function isStatisticallyEven(count1, count2)
-        -- Implement statistical evenness check
-        -- For simplicity, this could be a threshold difference check
-        local threshold = 0.15  -- 10% tolerance for difference
-        local total = count1 + count2
-        local expectedEach = total / 2
-        return math.abs(count1 - expectedEach) <= threshold * expectedEach and
-        math.abs(count2 - expectedEach) <= threshold * expectedEach
-    end
-    
-    
-    
-    
-    
-    function testNestedGOLUpdating()
         -- Initialize a 4x4 grid for the nested GOL test
         local testGrid = CAGrid(4, 4)
         
         -- Create Conway's GOL and Nesting GOL rules
         local conwaysGOL = ConwaysGOL()
-        local nestingGOL = NestingGOLRules()
+        local nestingGOL = NestingGOLRules(3, 3)
         
         -- Initialize CAUpdater with both rule sets
         local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
+        updater.grid:clear()
         
         -- Manually set a stable block pattern of nested grids in the center
         for i = 2, 3 do
@@ -340,35 +362,50 @@ function UnitTests_Nesting()
             end
         end
         
-        -- Set up the four start patterns of the GOL test cases in the nested grids
-        local nestedGrids = {testGrid.cells[2][2], testGrid.cells[2][3], testGrid.cells[3][2], testGrid.cells[3][3]}
-        setupGOLTestPatterns(nestedGrids)
+        -- Get test patterns
+        local starts, expecteds = makeGOLTestPatterns{}
         
+        -- Set up the four start patterns of the GOL test cases in the nested grids
+        testGrid.cells[2][2] = starts[1] 
+        testGrid.cells[2][3] = starts[2]  
+        testGrid.cells[3][2] = starts[3] 
+        testGrid.cells[3][3] = starts[4]
+
         -- Perform an update
         updater:update()
         
         -- Evaluate results and report errors with detailed grid states
-        local result1, result2, result3, result4 = evaluateGOLTestResults(nestedGrids)
-        local gridString, CAGridString
-        if result1 ~= true then
-            gridString = stringForGridTable(nestedGrids[1])
-            CAGridString = stringForCAGrid(testGrid.cells[2][2])
-            assert(false, "Test 1 failed. \nExpected:\n" .. gridString .. "\nActual:\n" .. CAGridString)
-        end
-        assert(result2 == true, "Test 2 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[2]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[2][3]))
-        assert(result3 == true, "Test 3 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[3]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[3][2]))
-        assert(result4 == true, "Test 4 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[4]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[3][3]))
+        local resultGrids = {testGrid.cells[2][2], testGrid.cells[2][3], testGrid.cells[3][2], testGrid.cells[3][3] }
+
+        local expected, actual
+        
+        expected = stringForGridTable(expecteds[1])
+        actual = stringForGridTable(resultGrids[1])
+        assert(expected == actual, "Test 1 failed. \nExpected:\n" .. expected .. "\nActual:\n" .. actual)
+        
+        expected = stringForGridTable(expecteds[2])
+        actual = stringForGridTable(resultGrids[2])
+        assert(expected == actual, "Test 2 failed. \nExpected:\n" .. expected .. "\nActual:\n" .. actual)
+        
+        expected = stringForGridTable(expecteds[3])
+        actual = stringForGridTable(resultGrids[3])
+        assert(expected == actual, "Test 3 failed. \nExpected:\n" .. expected .. "\nActual:\n" .. actual)
+        
+        expected = stringForGridTable(expecteds[4])
+        actual = stringForGridTable(resultGrids[4])
+        assert(expected == actual, "Test 4 failed. \nExpected:\n" .. expected .. "\nActual:\n" .. actual)
         
         print("* Nested GOL Updating Test Passed")
     end
     
 
+    
     -- Run the tests
     testNestingInitialization()
     testNestingRulesWithCustomSizes()
     testNestedGridAliveness()
     testNestedGridCellsInitialization()
-    --testNestedGOLUpdating()
+    testUpdatesInsideNestedGrids()
 end
 
 

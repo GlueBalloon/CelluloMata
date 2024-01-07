@@ -19,18 +19,18 @@ function Visualizer:draw()
             
             -- Draw nested cells if the current cell is a grid
             if type(cell) == "table" then
-                local nestedCellWidth = self.cellWidth / #cell
-                local nestedCellHeight = self.cellHeight / #cell[1]
-                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 50)
+                local nestedCellWidth = self.cellWidth / #cell.cells
+                local nestedCellHeight = self.cellHeight / #cell.cells[1]
+                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 80)
                 rect(x, y, self.cellWidth, self.cellHeight)
                 
-                for k = 1, #cell do
-                    for l = 1, #cell[k] do
-                        local subCell = cell[k][l]
+                for k = 1, #cell.cells do
+                    for l = 1, #cell.cells[k] do
+                        local subCell = cell.cells[k][l]
                         local subX = x + (l - 1) * nestedCellWidth
                         local subY = y + (k - 1) * nestedCellHeight
                         fill(subCell == 1 and self.grid.color or color(0, 0))
-                        rect(subX, subY, nestedCellWidth * 1.25, nestedCellHeight * 1.25)
+                        rect(subX, subY, nestedCellWidth * 1.2, nestedCellHeight * 1.2)
                     end
                 end
             end

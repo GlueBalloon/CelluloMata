@@ -19,7 +19,7 @@ end
 function CAUpdater:update()
     -- Create a new table for the updated states
     local newStates = {}
-    -- Uodate each cell
+    -- Update each cell
     for i = 1, self.grid.rows do
         newStates[i] = {}
         for j = 1, self.grid.cols do
