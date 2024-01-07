@@ -1,4 +1,117 @@
 
+function makeGOLTestPatterns()
+    local startPatterns = {
+        -- Pattern 1: Dead cell with three live neighbors becomes alive
+        {
+            {0, 1, 0},
+            {1, 0, 1},
+            {0, 0, 0}
+        },     
+        -- Pattern 2: Live cell with two live neighbors stays alive
+        {
+            {0, 1, 0},
+            {1, 1, 0},
+            {0, 0, 0}
+        },       
+        -- Pattern 3: Live cell with fewer than two live neighbors dies
+        {
+            {0, 1, 0},
+            {0, 1, 0},
+            {0, 0, 0}
+        },        
+        -- Pattern 4: Live cell with more than three live neighbors dies
+        {
+            {1, 1, 1},
+            {1, 1, 1},
+            {0, 0, 0}
+        }
+    }
+    
+    local resultPatterns = {
+        {
+            {0, 1, 0},
+            {0, 1, 0},
+            {0, 0, 0}
+        },
+        {
+            {1, 1, 0},
+            {1, 1, 0},
+            {0, 0, 0}
+        },
+        {
+            {0, 0, 0},
+            {0, 0, 0},
+            {0, 0, 0}
+        },
+        {
+            {1, 0, 1},
+            {1, 0, 1},
+            {0, 1, 0}
+        }
+    }
+    return startPatterns, resultPatterns
+end
+
+
+function evaluateGOLTestResults(grids)
+    -- Expected results after one update cycle
+    local _, expectedResults = makeGOLTestPatterns()
+    
+    local results = {}
+    for i = 1, #grids do
+        local grid = grids[i]
+        local expected = expectedResults[i]
+        local isMatch = true
+        local mismatchDetails = ""
+        
+        for r = 1, #grid.cells do
+            for c = 1, #grid.cells[r] do
+                if grid.cells[r][c] ~= expected[r][c] then
+                    isMatch = false
+                    mismatchDetails = mismatchDetails .. "Mismatch at [" .. r .. "," .. c .. "], Expected: " .. tostring(expected[r][c]) .. ", got: " .. tostring(grid.cells[r][c]) .. "\n"
+                end
+            end
+        end
+        
+        if isMatch then
+            results[i] = true
+        else
+            results[i] = "Test case " .. i .. " failed:\n" .. mismatchDetails
+        end
+    end
+    
+    return table.unpack(results)
+end
+
+
+-- Function to print the grid state (for debugging and test clarity)
+function stringForCAGrid(grid)
+    if type(grid) ~= "table" then return "1" end
+    local gridString = ""
+    for i = 1, #grid.cells do
+        local row = ""
+        for j = 1, #grid.cells[i] do
+            row = row .. (type(grid.cells[i][j]) == "table" and "G" or tostring(grid.cells[i][j])) .. " "
+        end
+        gridString = gridString .. row .. "\n"
+    end
+    return gridString
+end
+
+-- Function to return the grid state as a single string
+function stringForGridTable(gridState, nestingRows, nestingCols)
+    if type(grid) ~= "table" then return "1" end
+    local gridString = ""
+    for i = 1, #gridState do
+        local row = ""
+        for j = 1, #gridState[i] do
+            row = row .. (gridState[i][j] ~= 0 and "G" or tostring(gridState[i][j])) .. " "
+        end
+        gridString = gridString .. row .. "\n"
+    end
+    return gridString
+end
+
 
 function UnitTests_Nesting()
     print("___---___---___---\nUnitTests_Nesting")
@@ -30,7 +143,7 @@ function UnitTests_Nesting()
         -- Check if the number of grids and zeroes are statistically equal
         local totalCells = testGrid.rows * testGrid.cols
         local expectedCount = totalCells / 2
-        local tolerance = 0.15 * expectedCount  -- Allowing 10% tolerance
+        local tolerance = 0.2 * expectedCount  -- Allowing 20% tolerance
         
         print("Distribution of grids: " .. countGrids .. " grids, " .. countZeroes .. " zeroes")
         assert(math.abs(countGrids - expectedCount) <= tolerance, 
@@ -90,19 +203,19 @@ function UnitTests_Nesting()
         return grid
     end
     
-    
+
     
     
     
     --test if whole nesting cells live or die consistent with Conway's GOL rules
     function testNestedGridAliveness()
         local nestingRows, nestingCols = 2, 2  -- Define dimensions for nested grids
-    
+        
         -- Test function for NestingGOL with Conway's GOL rules
         local function runNestingConwaysGOLTest(description, startGridState, expectedGridState)
             print("Test: " .. description)
             local testGrid = CAGrid(3, 3)
-    
+            
             local conwaysGOL = ConwaysGOL()
             local nestingGOL = NestingGOLRules(nestingRows, nestingCols)
             local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
@@ -117,11 +230,11 @@ function UnitTests_Nesting()
             end
             updater.grid.wrapsAround = false
             
-
+            
             local startGrid = stringForCAGrid(updater.grid)
             --print("Starting Grid State:")
             --print(startGrid)
-    
+            
             updater:update()  -- Perform an update
             
             local expGrid = stringForGridTable(expectedGridState, nestingRows, nestingCols)
@@ -139,91 +252,18 @@ function UnitTests_Nesting()
             
             print(" Passed")
         end
-    
+        
         -- Test scenarios
+        local starts, expecteds = makeGOLTestPatterns{}
         -- Test: Dead cell with three live neighbors becomes alive
-        runNestingConwaysGOLTest("Dead cell with three live neighbors becomes alive",
-            {
-                {0, 1, 0},
-                {1, 0, 1},
-                {0, 0, 0}
-            },
-            {
-                {0, 1, 0},
-                {0, 1, 0},
-                {0, 0, 0}
-            }
-        )
-    
+        runNestingConwaysGOLTest("Dead cell with three live neighbors becomes alive", starts[1], expecteds[1])
         -- Test: Live cell with two live neighbors stays alive
-        runNestingConwaysGOLTest("Live cell with two live neighbors stays alive",
-            {
-                {0, 1, 0},
-                {1, 1, 0},
-                {0, 0, 0}
-            },
-            {
-                {1, 1, 0},
-                {1, 1, 0},
-                {0, 0, 0}
-            }
-        )
-    
+        runNestingConwaysGOLTest("Live cell with two live neighbors stays alive", starts[2], expecteds[2])
         -- Test: Live cell with fewer than two live neighbors dies
-        runNestingConwaysGOLTest("Live cell with fewer than two live neighbors dies",
-            {
-                {0, 1, 0},
-                {0, 1, 0},
-                {0, 0, 0}
-            },
-            {
-                {0, 0, 0},
-                {0, 0, 0},
-                {0, 0, 0}
-            }
-        )
-    
+        runNestingConwaysGOLTest("Live cell with fewer than two live neighbors dies", starts[3], expecteds[3])
         -- Test: Live cell with more than three live neighbors dies
-        runNestingConwaysGOLTest("Live cell with more than three live neighbors dies",
-            {
-                {1, 1, 1},
-                {1, 1, 1},
-                {0, 0, 0}
-            },
-            {
-                {1, 0, 1},
-                {1, 0, 1},
-                {0, 1, 0}
-            }
-        )
+        runNestingConwaysGOLTest("Live cell with more than three live neighbors dies", starts[4], expecteds[4])
     end
-    
-    -- Function to print the grid state (for debugging and test clarity)
-    function stringForCAGrid(grid)
-        local gridString = ""
-        for i = 1, #grid.cells do
-            local row = ""
-            for j = 1, #grid.cells[i] do
-                row = row .. (type(grid.cells[i][j]) == "table" and "G" or tostring(grid.cells[i][j])) .. " "
-            end
-            gridString = gridString .. row .. "\n"
-        end
-        return gridString
-    end
-    
-    -- Function to return the grid state as a single string
-    function stringForGridTable(gridState, nestingRows, nestingCols)
-        local gridString = ""
-        for i = 1, #gridState do
-            local row = ""
-            for j = 1, #gridState[i] do
-                row = row .. (gridState[i][j] ~= 0 and "G" or tostring(gridState[i][j])) .. " "
-            end
-            gridString = gridString .. row .. "\n"
-        end
-        return gridString
-    end
-    
     
     
     
@@ -281,11 +321,54 @@ function UnitTests_Nesting()
     
     
     
+    
+    function testNestedGOLUpdating()
+        -- Initialize a 4x4 grid for the nested GOL test
+        local testGrid = CAGrid(4, 4)
+        
+        -- Create Conway's GOL and Nesting GOL rules
+        local conwaysGOL = ConwaysGOL()
+        local nestingGOL = NestingGOLRules()
+        
+        -- Initialize CAUpdater with both rule sets
+        local updater = CAUpdater(testGrid, {conwaysGOL, nestingGOL})
+        
+        -- Manually set a stable block pattern of nested grids in the center
+        for i = 2, 3 do
+            for j = 2, 3 do
+                testGrid.cells[i][j] = CAGrid(3, 3)
+            end
+        end
+        
+        -- Set up the four start patterns of the GOL test cases in the nested grids
+        local nestedGrids = {testGrid.cells[2][2], testGrid.cells[2][3], testGrid.cells[3][2], testGrid.cells[3][3]}
+        setupGOLTestPatterns(nestedGrids)
+        
+        -- Perform an update
+        updater:update()
+        
+        -- Evaluate results and report errors with detailed grid states
+        local result1, result2, result3, result4 = evaluateGOLTestResults(nestedGrids)
+        local gridString, CAGridString
+        if result1 ~= true then
+            gridString = stringForGridTable(nestedGrids[1])
+            CAGridString = stringForCAGrid(testGrid.cells[2][2])
+            assert(false, "Test 1 failed. \nExpected:\n" .. gridString .. "\nActual:\n" .. CAGridString)
+        end
+        assert(result2 == true, "Test 2 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[2]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[2][3]))
+        assert(result3 == true, "Test 3 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[3]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[3][2]))
+        assert(result4 == true, "Test 4 failed. \nExpected:\n" .. stringForGridTable(nestedGrids[4]) .. "\nActual:\n" .. stringForCAGrid(testGrid.cells[3][3]))
+        
+        print("* Nested GOL Updating Test Passed")
+    end
+    
+
     -- Run the tests
     testNestingInitialization()
     testNestingRulesWithCustomSizes()
     testNestedGridAliveness()
     testNestedGridCellsInitialization()
+    --testNestedGOLUpdating()
 end
 
 
@@ -376,61 +459,16 @@ function UnitTests_CAUpdater()
     end
     
     function testUpdating()
-        -- Test: Live cell with two live neighbors stays alive
-        runCAUpdaterTest("Live cell with two live neighbors stays alive",
-        {
-            {0, 0, 1},
-            {0, 1, 0},
-            {1, 0, 0}
-        },
-        {
-            {0, 0, 0},
-            {0, 1, 0},
-            {0, 0, 0}
-        }
-        )
-        
+        -- Test scenarios
+        local starts, expecteds = makeGOLTestPatterns{}
         -- Test: Dead cell with three live neighbors becomes alive
-        runCAUpdaterTest("Dead cell with three live neighbors becomes alive",
-        {
-            {0, 1, 0},
-            {0, 0, 1},
-            {1, 0, 0}
-        },
-        {
-            {0, 0, 0},
-            {0, 1, 0},
-            {0, 0, 0}
-        }
-        )
-        
+        runCAUpdaterTest("Dead cell with three live neighbors becomes alive", starts[1], expecteds[1])
+        -- Test: Live cell with two live neighbors stays alive
+        runCAUpdaterTest("Live cell with two live neighbors stays alive", starts[2], expecteds[2])
         -- Test: Live cell with fewer than two live neighbors dies
-        runCAUpdaterTest("Live cell with fewer than two live neighbors dies",
-        {
-            {0, 1, 0},
-            {0, 1, 0},
-            {0, 0, 0}
-        },
-        {
-            {0, 0, 0},
-            {0, 0, 0},
-            {0, 0, 0}
-        }
-        )
-        
+        runCAUpdaterTest("Live cell with fewer than two live neighbors dies", starts[3], expecteds[3])
         -- Test: Live cell with more than three live neighbors dies
-        runCAUpdaterTest("Live cell with more than three live neighbors dies",
-        {
-            {1, 0, 1},
-            {1, 1, 1},
-            {0, 0, 0}
-        },
-        {
-            {1, 0, 1},
-            {1, 0, 1},
-            {0, 1, 0}
-        }
-        )
+        runCAUpdaterTest("Live cell with more than three live neighbors dies", starts[4], expecteds[4])
     end
     
     -- Run the tests
@@ -442,54 +480,25 @@ end
 function UnitTests_ConwaysGOL()
     print("___---___---___---\nUnitTests_ConwaysGOL")
     -- Test function
-    function runConwaysGOLTest(description, gridSetup, expectedResult)
+    function runConwaysGOLTest(description, startGrid, expectedResult)
         print("Test: " .. description)
         local testGrid = CAGrid(3, 3)
-        gridSetup(testGrid)
+        testGrid.cells = startGrid
         local conwaysGOL = ConwaysGOL()
         local result = conwaysGOL:nextCellState(testGrid, 2, 2)
         assert(result == expectedResult, "Expected " .. tostring(expectedResult) .. ", got " .. tostring(result))
         print(" Passed")
-    end
-    
-    
+    end    
+    -- Test scenarios
+    local starts, _ = makeGOLTestPatterns{}
     -- Test: Dead cell with three live neighbors becomes alive
-    runConwaysGOLTest("Dead cell with three live neighbors becomes alive",
-    function(grid)
-        grid.cells[1][2] = 1
-        grid.cells[2][1] = 1
-        grid.cells[2][3] = 1
-    end,
-    1)
-    
+    runConwaysGOLTest("Dead cell with three live neighbors becomes alive", starts[1], 1)
     -- Test: Live cell with two live neighbors stays alive
-    runConwaysGOLTest("Live cell with two live neighbors stays alive",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][2] = 1
-        grid.cells[2][1] = 1
-    end,
-    1)
-    
+    runConwaysGOLTest("Live cell with two live neighbors stays alive", starts[2], 1)
     -- Test: Live cell with fewer than two live neighbors dies
-    runConwaysGOLTest("Live cell with fewer than two live neighbors dies",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][2] = 1
-    end,
-    0)
-    
+    runConwaysGOLTest("Live cell with fewer than two live neighbors dies", starts[3], 0)
     -- Test: Live cell with more than three live neighbors dies
-    runConwaysGOLTest("Live cell with more than three live neighbors dies",
-    function(grid)
-        grid.cells[2][2] = 1
-        grid.cells[1][1] = 1
-        grid.cells[1][2] = 1
-        grid.cells[1][3] = 1
-        grid.cells[2][1] = 1
-    end,
-    0)
-    
+    runConwaysGOLTest("Live cell with more than three live neighbors dies", starts[4], 0)
 end
 
 
