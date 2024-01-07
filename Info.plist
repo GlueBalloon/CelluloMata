@@ -10,6 +10,7 @@
 		<string>CAUpdater</string>
 		<string>Visualizer</string>
 		<string>Utilities</string>
+		<string>Tests</string>
 	</array>
 </dict>
 </plist>

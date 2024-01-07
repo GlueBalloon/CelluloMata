@@ -21,13 +21,15 @@ function Visualizer:draw()
             if type(cell) == "table" then
                 local nestedCellWidth = self.cellWidth / #cell
                 local nestedCellHeight = self.cellHeight / #cell[1]
+                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 50)
+                rect(x, y, self.cellWidth, self.cellHeight)
                 
                 for k = 1, #cell do
                     for l = 1, #cell[k] do
                         local subCell = cell[k][l]
                         local subX = x + (l - 1) * nestedCellWidth
                         local subY = y + (k - 1) * nestedCellHeight
-                        fill(subCell == 1 and self.grid.color or color(0))
+                        fill(subCell == 1 and self.grid.color or color(0, 0))
                         rect(subX, subY, nestedCellWidth * 1.25, nestedCellHeight * 1.25)
                     end
                 end
