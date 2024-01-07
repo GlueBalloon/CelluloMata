@@ -21,7 +21,7 @@ function Visualizer:draw()
             if type(cell) == "table" then
                 local nestedCellWidth = self.cellWidth / #cell.cells
                 local nestedCellHeight = self.cellHeight / #cell.cells[1]
-                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 80)
+                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 255)
                 rect(x, y, self.cellWidth, self.cellHeight)
                 
                 for k = 1, #cell.cells do
