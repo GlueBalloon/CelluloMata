@@ -104,10 +104,8 @@ function NestingGOLRules:nextCellState(grid, row, col)
             for i = 1, contents.rows do
                 for j = 1, contents.cols do
                     -- Apply each rule to determine the next state of each cell
-                    for _, rule in ipairs(self.rules) do
                         contents.cells[i][j] = 
-                            ConwaysGOL.nextCellState(self, contents.cells, i, j)
-                    end
+                            ConwaysGOL.nextCellState(self, contents, i, j)
                 end
             end
         end

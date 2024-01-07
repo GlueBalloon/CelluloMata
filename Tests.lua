@@ -233,7 +233,7 @@ function UnitTests_Nesting()
             
             updater:update()  -- Perform an update
             
-            local expGrid = stringForCAGrid(expectedGridState)
+            local expGrid = stringForGridTable(expectedGridState)
             print("Expected Grid State:")
             print(expGrid)
             
@@ -364,18 +364,24 @@ function UnitTests_Nesting()
         
         -- Get test patterns
         local starts, expecteds = makeGOLTestPatterns{}
+        local starts1, starts2, starts3, starts4 = CAGrid(3, 3), CAGrid(3, 3), CAGrid(3, 3), CAGrid(3, 3)
+        starts1.grid = starts[1] 
+        starts2.grid = starts[2]  
+        starts3.grid = starts[3] 
+        starts4.grid = starts[4]
+        
         
         -- Set up the four start patterns of the GOL test cases in the nested grids
-        testGrid.cells[2][2] = starts[1] 
-        testGrid.cells[2][3] = starts[2]  
-        testGrid.cells[3][2] = starts[3] 
-        testGrid.cells[3][3] = starts[4]
+        testGrid.cells[2][2] = starts1
+        testGrid.cells[2][3] = starts2
+        testGrid.cells[3][2] = starts3
+        testGrid.cells[3][3] = starts4
 
         -- Perform an update
         updater:update()
         
         -- Evaluate results and report errors with detailed grid states
-        local resultGrids = {testGrid.cells[2][2], testGrid.cells[2][3], testGrid.cells[3][2], testGrid.cells[3][3] }
+        local resultGrids = {testGrid.cells[2][2].cells, testGrid.cells[2][3].cells, testGrid.cells[3][2].cells, testGrid.cells[3][3].cells }
 
         local expected, actual
         
