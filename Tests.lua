@@ -515,8 +515,10 @@ function UnitTests_CAUpdater()
     end
     
     -- Run the tests
+    isTesting = true
     testRandomInitialization()
     testUpdating()
+    isTesting = false
 end
 
 

@@ -4,7 +4,7 @@ CAUpdater = class()
 function CAUpdater:init(grid, rulesTable)
     self.grid = grid
     self.rules = rulesTable or {}
-    self.speed = 0.25
+    self.speed = 0.05
     self.timeCheck = ElapsedTime
     self:setUpRules(self.rules)
 end
@@ -20,41 +20,35 @@ end
 
 function CAUpdater:update()
     --speed control:
-    if ElapsedTime - self.timeCheck < self.speed then
+    if (not isTesting) and 
+        ElapsedTime - self.timeCheck < self.speed then
         return 
     end
     self.timeCheck = ElapsedTime
-    -- Create a new table for the updated states
-    local newStates = {}
-    -- Update each cell
-    for i = 1, self.grid.rows do
-        newStates[i] = {}
-        for j = 1, self.grid.cols do
-            -- Apply each rule to determine the next state of each cell
-            for _, rule in ipairs(self.rules) do
-                newStates[i][j] = rule:nextCellState(self.grid, i, j)
-            end
+    -- Generate new states for each cell by applying the rules
+    local newStates = self.grid:resultsForEachCell(function(grid, i, j)
+        local currentState = grid.cells[i][j]
+        for _, rule in ipairs(self.rules) do
+            currentState = rule:nextCellState(grid, i, j, currentState)
         end
-    end
+        return currentState
+    end)
     if isTesting then
         print("old: \n"..tostring(formatGrid(self.grid.cells)))
         print("new: \n"..tostring(formatGrid(newStates)))
     end
-    -- Update the grid's cells with the new states
-    for i = 1, self.grid.rows do
-        for j = 1, self.grid.cols do
-            self.grid.cells[i][j] = newStates[i][j]
-        end
-    end
+    self.grid:applyNewStates(newStates)
 end
 
 function CAUpdater:become2x2NestedGrid(nestedSize)
     local nestedSize = nestedSize or 3
     self.grid = CAGrid(2,2)
+    self.grid.wrapsAround = false
     self:setUpRules(self.rules)
     for i = 1, 2 do
         for j = 1, 2 do
-            self.grid.cells[i][j] = CAGrid(nestedSize, nestedSize)  -- Assuming 3x3 nested grid
+            self.grid.cells[i][j] = CAGrid(nestedSize, nestedSize)
+            ConwaysGOL.randomFill(self.grid.cells[i][j].cells)
         end
     end
 end

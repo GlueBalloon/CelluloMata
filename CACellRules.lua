@@ -100,14 +100,10 @@ function NestingGOLRules:nextCellState(grid, row, col)
         local contents = grid.cells[row][col]
         -- Check for nested grid
         if type(contents) == "table" then
-            -- Update each cell
-            for i = 1, contents.rows do
-                for j = 1, contents.cols do
-                    -- Apply each rule to determine the next state of each cell
-                        contents.cells[i][j] = 
-                            ConwaysGOL.nextCellState(self, contents, i, j)
-                end
-            end
+            local newStates = contents:resultsForEachCell(function(grid,row,col)
+                return ConwaysGOL.nextCellState(self, grid, row,col)
+            end)
+            contents:applyNewStates(newStates)
         end
         return contents
     end

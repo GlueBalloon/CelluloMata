@@ -28,6 +28,27 @@ function CAGrid:clear()
     end
 end
 
+function CAGrid:applyNewStates(newStates)
+    for i = 1, self.rows do
+        for j = 1, self.cols do
+            self.cells[i][j] = newStates[i][j]
+        end
+    end
+end
+
+-- Method to return the results of applying a function to each cell
+function CAGrid:resultsForEachCell(funcToApply)
+    local results = {}
+    for i = 1, self.rows do
+        results[i] = {}
+        for j = 1, self.cols do
+            results[i][j] = funcToApply(self, i, j)
+        end
+    end
+    return results
+end
+
+
 function CAGrid:queryCell(row, col)
     -- Set the currently focused cell for querying
     if row and col then

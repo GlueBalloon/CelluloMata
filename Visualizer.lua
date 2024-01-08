@@ -21,18 +21,22 @@ function Visualizer:draw()
             if type(cell) == "table" then
                 local nestedCellWidth = self.cellWidth / #cell.cells
                 local nestedCellHeight = self.cellHeight / #cell.cells[1]
-                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 255)
+                local nestedOffsetW = nestedCellWidth * 0.5
+                local nestedOffsetH = nestedCellHeight * 0.5
+                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 93)
                 rect(x, y, self.cellWidth, self.cellHeight)
-                
+                pushStyle()
+                rectMode(CENTER)
                 for k = 1, #cell.cells do
                     for l = 1, #cell.cells[k] do
                         local subCell = cell.cells[k][l]
                         local subX = x + (l - 1) * nestedCellWidth
                         local subY = y + (k - 1) * nestedCellHeight
-                        fill(subCell == 1 and self.grid.color or color(0, 0))
-                        rect(subX, subY, nestedCellWidth * 1.2, nestedCellHeight * 1.2)
+                        fill(subCell ~= 0 and self.grid.color or color(0, 0))
+                        rect(subX + nestedOffsetW, subY + nestedOffsetH, nestedCellWidth * 1.25, nestedCellHeight * 1.25)
                     end
                 end
+                popStyle()
             end
         end
     end
