@@ -1,7 +1,7 @@
 
 function setup()
     local gridSize = math.random(10, 60)
-    gridSize = 22
+    gridSize = 8
     local nestedSize = 8
     grid = CAGrid(gridSize, gridSize) -- Create a 20x20 grid
     grid.color = randomPastellyColor()

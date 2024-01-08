@@ -23,7 +23,7 @@ function Visualizer:draw()
                 local nestedCellHeight = self.cellHeight / #cell.cells[1]
                 local nestedOffsetW = nestedCellWidth * 0.5
                 local nestedOffsetH = nestedCellHeight * 0.5
-                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 93)
+                fill(self.grid.color.r, self.grid.color.g, self.grid.color.b, 83)
                 rect(x, y, self.cellWidth, self.cellHeight)
                 pushStyle()
                 rectMode(CENTER)
