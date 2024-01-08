@@ -59,6 +59,7 @@ NestingGOLRules.convertOnesToGrids = function(grid, rows, cols)
             if grid.cells[i][j] ~= 0 then
                 -- Convert cell to a nested grid
                 local nestedGrid = CAGrid(rows, cols)
+                nestedGrid.color = randomPastellyColor()
                 grid.cells[i][j] = nestedGrid                
                 -- Randomly initialize the nested grid
                 for r = 1, rows do

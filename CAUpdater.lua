@@ -43,12 +43,13 @@ end
 function CAUpdater:become2x2NestedGrid(nestedSize)
     local nestedSize = nestedSize or 3
     self.grid = CAGrid(2,2)
-    self.grid.wrapsAround = false
     self:setUpRules(self.rules)
+    self.grid.wrapsAround = false
     for i = 1, 2 do
         for j = 1, 2 do
             self.grid.cells[i][j] = CAGrid(nestedSize, nestedSize)
             ConwaysGOL.randomFill(self.grid.cells[i][j].cells)
+            self.grid.cells[i][j].color = randomPastellyColor()
         end
     end
 end
