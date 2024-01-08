@@ -32,7 +32,7 @@ function Visualizer:draw()
                         local subCell = cell.cells[k][l]
                         local subX = x + (l - 1) * nestedCellWidth
                         local subY = y + (k - 1) * nestedCellHeight
-                        fill(subCell ~= 0 and self.grid.color or color(0, 0))
+                        fill(subCell ~= 0 and cell.color or color(0, 0))
                         rect(subX + nestedOffsetW, subY + nestedOffsetH, nestedCellWidth * 1.25, nestedCellHeight * 1.25)
                     end
                 end

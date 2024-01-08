@@ -59,8 +59,7 @@ NestingGOLRules.convertOnesToGrids = function(grid, rows, cols)
             if grid.cells[i][j] ~= 0 then
                 -- Convert cell to a nested grid
                 local nestedGrid = CAGrid(rows, cols)
-                grid.cells[i][j] = nestedGrid
-                
+                grid.cells[i][j] = nestedGrid                
                 -- Randomly initialize the nested grid
                 for r = 1, rows do
                     for c = 1, cols do
@@ -92,6 +91,7 @@ function NestingGOLRules:nextCellState(grid, row, col)
     -- if becoming alive, return new nested grid
     if (not isAlive) and hasThree then 
         local newGrid = CAGrid(self.rows, self.cols)
+        newGrid.color = randomPastellyColor()
         ConwaysGOL.randomFill(newGrid.cells)
         return newGrid 
     end
