@@ -4,7 +4,7 @@ CAUpdater = class()
 function CAUpdater:init(grid, rulesTable)
     self.grid = grid
     self.rules = rulesTable or {}
-    self.speed = 0.05
+    self.speed = 0.08
     self.timeCheck = ElapsedTime
     self:setUpRules(self.rules)
 end
